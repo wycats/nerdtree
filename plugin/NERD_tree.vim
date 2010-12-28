@@ -147,7 +147,7 @@ endif
 let s:NERDTreeBufName = 'NERD_tree_'
 
 let s:tree_wid = 2
-let s:tree_markup_reg = '^[ `|]*[\-+~]'
+let s:tree_markup_reg = '^[ `|▼▶]*[\-+~ ]*'
 let s:tree_up_dir_line = '.. (up a dir)'
 
 "the number to add to the nerd tree buffer name to make the buf name unique
@@ -1313,34 +1313,20 @@ function! s:TreeFileNode._renderToString(depth, drawText, vertMap, isLastChild)
         "get all the leading spaces and vertical tree parts for this line
         if a:depth > 1
             for j in a:vertMap[0:-2]
-                if j ==# 1
-                    let treeParts = treeParts . '| '
-                else
-                    let treeParts = treeParts . '  '
-                endif
+                let treeParts = treeParts . '  '
             endfor
         endif
 
-        "get the last vertical tree part for this line which will be different
-        "if this node is the last child of its parent
-        if a:isLastChild
-            let treeParts = treeParts . '`'
-        else
-            let treeParts = treeParts . '|'
-        endif
-
-
-        "smack the appropriate dir/file symbol on the line before the file/dir
-        "name itself
         if self.path.isDirectory
             if self.isOpen
-                let treeParts = treeParts . '~'
+                let treeParts = treeParts . '▼ '
             else
-                let treeParts = treeParts . '+'
+                let treeParts = treeParts . '▶ '
             endif
         else
-            let treeParts = treeParts . '-'
+            let treeParts = treeParts . ''
         endif
+
         let line = treeParts . self.displayString()
 
         let output = output . line . "\n"
@@ -3068,9 +3054,9 @@ function! s:getPath(ln)
     endif
 
     " in case called from outside the tree
-    if line !~ '^ *[|`]' || line =~ '^$'
-        return {}
-    endif
+    "if line !~ '^ *[|`▶▼ ]' || line =~ '^$'
+        "return {}
+    "endif
 
     if line ==# s:tree_up_dir_line
         return b:NERDTreeRoot.path.getParent()
@@ -3628,24 +3614,8 @@ endfunction
 function! s:checkForActivate()
     let currentNode = s:TreeFileNode.GetSelected()
     if currentNode != {}
-        let startToCur = strpart(getline(line(".")), 0, col("."))
-        let char = strpart(startToCur, strlen(startToCur)-1, 1)
-
-        "if they clicked a dir, check if they clicked on the + or ~ sign
-        "beside it
-        if currentNode.path.isDirectory
-            if startToCur =~ s:tree_markup_reg . '$' && char =~ '[+~]'
-                call s:activateNode(0)
-                return
-            endif
-        endif
-
-        if (g:NERDTreeMouseMode ==# 2 && currentNode.path.isDirectory) || g:NERDTreeMouseMode ==# 3
-            if char !~ s:tree_markup_reg && startToCur !~ '\/$'
-                call s:activateNode(0)
-                return
-            endif
-        endif
+        call s:activateNode(0)
+        return
     endif
 endfunction
 
