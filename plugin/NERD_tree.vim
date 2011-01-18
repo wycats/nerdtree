@@ -3611,14 +3611,35 @@ function! s:bookmarkNode(name)
     endif
 endfunction
 "FUNCTION: s:checkForActivate() {{{2
-"Checks if the click should open the current node, if so then activate() is
-"called (directories are automatically opened if the symbol beside them is
-"clicked)
 function! s:checkForActivate()
     let currentNode = s:TreeFileNode.GetSelected()
     if currentNode != {}
-        call s:activateNode(0)
-        return
+        let startToCur = strpart(getline(line(".")), 0, col("."))
+        " set first 3 characters starting with cursor position
+        " used arrows are 3-length strings (even if they appear as single
+        " character
+        " ▶ would be 9654 | \xe2\x96\xb6 | 226 150 182
+        " ▼ would be 9660 | \xe2\x96\xbc | 226 150 188
+        let first3 = strpart(getline(line(".")), col(".") - 1, col(".") + 2)
+        let first3nr = char2nr(first3)
+
+        "if they clicked a dir, check if they clicked on the ▶ or ▼ sign
+        "beside it
+        if currentNode.path.isDirectory
+            if first3nr == 9654 || first3nr == 9660
+                call s:activateNode(0)
+                return
+            endif
+        endif
+
+        "if mouse mode is 3 or (2 and node is directory) activate node
+        "immediately
+        if (g:NERDTreeMouseMode ==# 2 && currentNode.path.isDirectory) || g:NERDTreeMouseMode ==# 3
+            if startToCur !~ '\/$'
+                call s:activateNode(0)
+                return
+            endif
+        endif
     endif
 endfunction
 
