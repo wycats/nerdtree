@@ -3617,8 +3617,10 @@ endfunction
 function! s:checkForActivate()
     let currentNode = s:TreeFileNode.GetSelected()
     if currentNode != {}
-        call s:activateNode(0)
-        return
+        if (g:NERDTreeMouseMode ==# 2 && currentNode.path.isDirectory) || g:NERDTreeMouseMode ==# 3
+            call s:activateNode(0)
+            return
+        endif
     endif
 endfunction
 
